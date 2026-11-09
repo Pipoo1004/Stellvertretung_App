@@ -50,11 +50,26 @@ with st.form("eingabe_form", clear_on_submit=True):
 st.divider() 
 st.subheader("Dashboard: Alle Stellvertretungen")
 
-# Daten aus der Datenbank auslesen
-df = pd.read_sql_query("SELECT datum, lektion, fach, abwesende_lp, vertretende_lp FROM stellvertretungen", conn)
+# Wir lesen jetzt auch die 'id' aus, um den Eintrag identifizieren zu können
+df = pd.read_sql_query("SELECT id, datum, lektion, fach, abwesende_lp, vertretende_lp FROM stellvertretungen", conn)
 
 # Daten als interaktive Tabelle anzeigen
 if not df.empty:
     st.dataframe(df, use_container_width=True, hide_index=True)
+    
+    # 5. Verwaltungs-Bereich (Löschen)
+    st.divider()
+    st.subheader("Eintrag verwalten")
+    
+    # Dropdown-Menü mit allen vorhandenen IDs
+    zu_loeschende_id = st.selectbox("Welcher Eintrag soll gelöscht werden? (Bitte ID wählen)", df['id'])
+    
+    # Button zum Löschen
+    if st.button("Diesen Eintrag löschen"):
+        cursor.execute("DELETE FROM stellvertretungen WHERE id = ?", (zu_loeschende_id,))
+        conn.commit()
+        st.success(f"Der Eintrag mit der ID {zu_loeschende_id} wurde erfolgreich gelöscht!")
+        st.rerun() # Lädt die Seite sofort neu, damit die Tabelle aktualisiert wird
+
 else:
     st.info("Bisher wurden noch keine Stellvertretungen erfasst.")
